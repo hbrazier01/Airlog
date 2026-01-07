@@ -3,14 +3,14 @@ services:
     container_name: 'kitties-proof-server'
     image: "midnightnetwork/proof-server:4.0.0"
     ports:
-      - "6300"
+      - "6300:6300"
     environment:
       RUST_BACKTRACE: "full"
   indexer:
     container_name: 'kitties-indexer'
     image: 'midnightntwrk/indexer-standalone:2.1.1'
     ports:
-      - '0:8088'
+      - '8088:8088'
     environment:
       RUST_LOG: "indexer=info,chain_indexer=info,indexer_api=info,wallet_indexer=info,indexer_common=info,fastrace_opentelemetry=off,info"
       # Random 32-byte hex-encoded secret used to make the standalone indexer run.
@@ -24,12 +24,26 @@ services:
     image: 'midnightnetwork/midnight-node:0.12.0'
     container_name: 'kitties-node'
     ports:
-      - "9955:9944"
+      - "9944:9944"
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9955/health" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:9944/health" ]
       interval: 2s
       timeout: 5s
       retries: 5
       start_period: 40s
     environment:
       CFG_PRESET: "dev"
+  airlog-read-api:
+    image: node:20-alpine
+    container_name: 'airlog-read-api'
+    working_dir: /app
+    volumes:
+      - ../../:/app
+    ports:
+      - "8787:8787"
+    environment:
+      PORT: "8787"
+      COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+      AIRLOG_CONTRACT_ADDRESS: "0200a25c5644059c933eb9a2762a4ffdaa80211c0bf7e538ac18bb6833c6ab31a1dd"
+    command: sh -lc "cd /app && node packages/cli/airlog/src/readApi.mjs"
+    restart: unless-stopped
