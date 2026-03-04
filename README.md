@@ -2,6 +2,8 @@
 
 **AirLog** is a verifiable aircraft maintenance ledger built with Compact smart contracts.
 
+Built using Midnight’s privacy-preserving smart contract platform.
+
 It enables aircraft owners to authorize maintenance issuers (A&P mechanics, repair stations) to write immutable, cryptographically verifiable maintenance entries. Buyers, insurers, and lenders can independently verify maintenance history via a read-only API without trusting intermediaries.
 
 ---
@@ -34,6 +36,7 @@ Other directories (e.g. kitties examples) are retained as learning/reference mat
 - CLI: Implemented
 - Read API: Implemented
 - UI: Planned (read-only first)
+- Network: Midnight Preprod
 
 ---
 
