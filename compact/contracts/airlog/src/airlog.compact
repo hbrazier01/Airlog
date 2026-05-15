@@ -1,0 +1,84 @@
+/**
+ * AirLog v2 – Hash Anchoring Only
+ *
+ * Design:
+ *   - Full records stay OFF-CHAIN (pilot logbook, maintenance entries, etc.)
+ *   - Only the recordHash is anchored on-chain via anchorEntry()
+ *   - No prerequisites: first write succeeds with no prior setup
+ *
+ * On-chain state per entry:
+ *   entryId (auto-increment), owner, recordHash, anchoredAt (caller-supplied Unix seconds)
+ */
+
+pragma language_version >= 0.16.0;
+
+import CompactStandardLibrary;
+
+// ---------------------
+// Types
+// ---------------------
+
+export struct EntryAnchor {
+  owner: ZswapCoinPublicKey,
+  recordHash: Bytes<32>,
+  anchoredAt: Uint<64>
+}
+
+// ---------------------
+// Ledger state
+// ---------------------
+
+// entryId -> EntryAnchor
+export ledger entryStore: Map<Uint<64>, EntryAnchor>;
+
+// Global entry counter: key 0 holds nextEntryId (starts at 0, no prior setup needed)
+export ledger nextEntryId: Map<Uint<64>, Uint<64>>;
+
+// ---------------------
+// Public circuits
+// ---------------------
+
+/**
+ * Anchor a record hash on-chain.
+ * No prerequisites — works on a fresh contract with zero prior state.
+ *
+ * @param recordHash  SHA-256 of the canonical off-chain record (32 bytes)
+ * @param anchoredAt  Unix timestamp in seconds (supplied by caller)
+ * @returns           The assigned entryId
+ */
+export circuit anchorEntry(recordHash: Bytes<32>, anchoredAt: Uint<64>): Uint<64> {
+  const sender = ownPublicKey();
+
+  // Read current counter; guard against uninitialized state on fresh contract
+  const COUNTER_KEY = 0 as Uint<64>;
+  const id: Uint<64> = nextEntryId.member(disclose(COUNTER_KEY))
+    ? nextEntryId.lookup(disclose(COUNTER_KEY))
+    : (0 as Uint<64>);
+
+  const entry = EntryAnchor {
+    owner: sender,
+    recordHash: recordHash,
+    anchoredAt: anchoredAt
+  };
+
+  entryStore.insert(disclose(id), disclose(entry));
+  nextEntryId.insert(disclose(COUNTER_KEY), disclose((id + 1) as Uint<64>));
+
+  return id;
+}
+
+/**
+ * Look up a stored entry anchor by entryId.
+ */
+export circuit getEntry(entryId: Uint<64>): EntryAnchor {
+  assert(entryStore.member(disclose(entryId)), "Entry not found");
+  return entryStore.lookup(disclose(entryId));
+}
+
+/**
+ * Returns the next entryId (i.e. how many entries have been anchored).
+ */
+export circuit getNextEntryId(): Uint<64> {
+  const COUNTER_KEY = 0 as Uint<64>;
+  return nextEntryId.lookup(disclose(COUNTER_KEY));
+}
