@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": ["src/**/*.test.ts", "src/cli/wallet-connect.ts"],
+  "compilerOptions": {
+    "rootDir": "src"
+  }
+}
