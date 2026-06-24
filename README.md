@@ -1,4 +1,4 @@
-Built on Midnight (dApps, contracts, or tooling that run directly on Midnight): "This project is built on the Midnight Network."
+Pilot identity, flight logging, and verifiable aviation records built on the Midnight Network.
 
 # PilotLog
 
